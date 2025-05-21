@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mapa Mental: Lógica de Programação com Descrições</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+  body, html {
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #141E30, #243B55);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .container {
+    position: relative;
+    width: 100vw;
+    height: 70vh;
+    max-width: 900px;
+  }
+
+  .center-node {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #FF6F61;
+    padding: 28px 48px;
+    border-radius: 50%;
+    box-shadow: 0 0 25px rgba(255,111,97,0.8);
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  .center-node:hover {
+    background: #ff8a75;
+  }
+
+  .node {
+    position: absolute;
+    background: rgba(255 255 255 / 0.15);
+    padding: 16px 26px;
+    border-radius: 40px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    font-weight: 600;
+    font-size: 1.2rem;
+    cursor: pointer;
+    user-select: none;
+    color: #f0f0f0;
+    text-align: center;
+    max-width: 140px;
+    border: none;
+    outline: none;
+    transition:
+      background 0.3s,
+      box-shadow 0.3s,
+      color 0.3s;
+  }
+  .node:hover {
+    background: #FF6F61;
+    box-shadow: 0 0 25px #FF6F61;
+    color: #fff;
+  }
+  .node.active {
+    background: #FF6F61;
+    box-shadow: 0 0 30px 4px #ff6f61cc;
+    color: #fff;
+  }
+
+  .description-panel {
+    max-width: 900px;
+    width: 90vw;
+    background: rgba(255 255 255 / 0.1);
+    border-radius: 12px;
+    padding: 20px 30px;
+    margin-top: 40px;
+    min-height: 150px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    font-size: 1.15rem;
+    line-height: 1.5;
+    color: #f9f9f9;
+    user-select: text;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.5s ease, max-height 0.5s ease, margin-top 0.5s ease;
+  }
+  .description-panel.visible {
+    opacity: 1;
+    max-height: 300px;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="container">
+  <div class="center-node" id="center-node" aria-label="Tema Central">Lógica de Programação</div>
+
+  <button class="node" data-description="Espaço para armazenar valores que podem variar durante a execução do programa.">Variável</button>
+  <button class="node" data-description="Estrutura que permite executar um bloco de códigos apenas se uma condição for verdadeira.">Condicional</button>
+  <button class="node" data-description="Estrutura que repete um bloco de códigos enquanto ou até que uma condição seja satisfeita.">Loop</button>
+  <button class="node" data-description="Bloco reutilizável de código que executa uma tarefa específica.">Função</button>
+  <button class="node" data-description="Dados que o programa recebe para processar, como informações do usuário.">Entrada</button>
+  <button class="node" data-description="Resultados que o programa devolve após o processamento das entradas.">Saída</button>
+  <button class="node" data-description="Conjunto organizado de instruções para resolver um problema ou executar uma tarefa.">Algoritmo</button>
+  <button class="node" data-description="Representação gráfica do algoritmo que mostra o fluxo lógico das operações.">Fluxograma</button>
+  <button class="node" data-description="Instruções ou ordens individuais que o programa executa.">Comando</button>
+  <button class="node" data-description="Processo de identificar e corrigir erros no código para garantir o funcionamento correto.">Debug</button>
+</div>
+
+<div class="description-panel" id="description-panel" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+  function positionNodes() {
+    const container = document.getElementById('container');
+    const center = document.getElementById('center-node');
+    const nodes = container.querySelectorAll('.node');
+
+    const centerRect = center.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const cx = centerRect.left + centerRect.width / 2 - containerRect.left;
+    const cy = centerRect.top + centerRect.height / 2 - containerRect.top;
+
+    const centerRadiusX = centerRect.width / 2;
+    const centerRadiusY = centerRect.height / 2;
+    const minDistanceX = centerRadiusX + 60; // Distância mínima horizontal
+    const minDistanceY = centerRadiusY + 60; // Distância mínima vertical
+    const availableRadiusX = (containerRect.width / 2) - minDistanceX;
+    const availableRadiusY = (containerRect.height / 2) - minDistanceY;
+    const aspectRatio = availableRadiusX / availableRadiusY || 1; // Para manter proporção se possível
+    const nodeCount = nodes.length;
+
+    nodes.forEach((node, index) => {
+      const angle = (2 * Math.PI / nodeCount) * index - Math.PI / 2;
+      const ellipticalFactorX = 1; // Fator para controlar a largura da elipse
+      const ellipticalFactorY = 0.7; // Fator para controlar a altura da elipse
+
+      const x = cx + minDistanceX * Math.cos(angle) * ellipticalFactorX + availableRadiusX * 0.5 * Math.cos(angle) * ellipticalFactorX;
+      const y = cy + minDistanceY * Math.sin(angle) * ellipticalFactorY + availableRadiusY * 0.5 * Math.sin(angle) * ellipticalFactorY;
+
+      const nodeWidth = node.offsetWidth;
+      const nodeHeight = node.offsetHeight;
+
+      node.style.left = (x - nodeWidth / 2) + 'px';
+      node.style.top = (y - nodeHeight / 2) + 'px';
+    });
+  }
+
+  function setupButtons() {
+    const nodes = document.querySelectorAll('.node');
+    const descriptionPanel = document.getElementById('description-panel');
+
+    nodes.forEach(button => {
+      button.addEventListener('click', () => {
+        nodes.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        const desc = button.getAttribute('data-description');
+        descriptionPanel.textContent = desc;
+        descriptionPanel.classList.add('visible');
+        descriptionPanel.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    const centerNode = document.getElementById('center-node');
+    centerNode.addEventListener('click', () => {
+      nodes.forEach(btn => btn.classList.remove('active'));
+      descriptionPanel.classList.remove('visible');
+      descriptionPanel.textContent = '';
+    });
+  }
+
+  window.addEventListener('load', () => {
+    positionNodes();
+    setupButtons();
+  });
+  window.addEventListener('resize', positionNodes);
+</script>
+
+</body>
+</html>
